@@ -135,11 +135,95 @@ private:
 * Ни *std::move*, ни *std::forward* не выполняют никаких действий  времени выполнения
 
 
+### 5.2 Отличие универсальных ссылок от rvalue-ссылок
 
+*T&&* имеет два разных значения:
+1. *rvalu*e-ссылка
+2. либо *rvalue*-ссылка, либо *lvalue-*ссылка (универсальные ссылки)
 
+Универсальные ссылки также могут быть связаны с *const*, *volatile* или *const volatile* объектами.
 
+Универсальные ссылки возникают в двух контекстаз:
+```cpp
+// Параметры шаблона функций
+template <typename T>
+void f (T&& param);
 
+// Объявление auto
+auto&& var2 = var1;
+```
 
+Их связывает *вывод типа*.
+
+```cpp
+template <typename T>
+void f (T&& param);
+
+Widget w;
+f (w);                // В f передаётся lvalue; param - Widget& (lvalue-ссылка)
+
+f (std::move w));    // В f передаётся rvalue; param - Widget&& (rvalue-ссылка)
+
+template <typename T>
+void g (std::vector <T>&& param); // param - rvalue-ссылка
+
+template <typename T>
+void w (const T&& param); // param - rvalue-ссылка
+```
+
+Интересный пример:
+```cpp
+template <class T, class Allocator = allocator <T>>
+class vector {
+public:
+    void push_back (T&& x);
+};
+```
+
+Хотя и похоже, но здесь универсальной  ссылки нет, потому что нет вывода типа для x. Дело в том, что push_back не может существовать без конкретного инстанцированного вектора, частью которого он является; а тип этого инстанцирования полностью определяет объявление push_back.
+
+Т.е. код:
+```cpp
+    std::vector <Widget> v;
+```
+Приводит к следующему инстанцированию шаблона:
+```cpp
+class vector <Widget, allocator <Widget>> {
+public:
+    void push_back (Widget&& x); // x - rvalue-ссылка
+};
+```
+
+А вот здесь уже будет вывод типа:
+```cpp
+template <class T, class Allocator = allocator <T>>
+class vectr {
+public:
+    template <class... Args>
+    void emplace_back (Args&&... args); // Универсальный указатель
+};
+```
+
+Пример с замером времени работы функции:
+```cpp
+auto timeFuncInvocation = 
+[] (auto&& func, auto&&... params)    // func - унив. ссылка, params - нуль или несколько унив. ссылок
+{
+    // Запуск таймера
+    std::forward <decltype (func)> (func) (
+        std::forward <decltype (params)> (params)...;
+    );
+    // Остановка таймера
+}
+```
+Весь этот раздел  - основы универсальных ссылок - абстракция. Лежащая в основе истина - это свёртывание ссылок (reference collapsing).
+
+### <center>Следует запомнить</center>
+* Если параметр шаблона функции имеет тип *T&&* для выводимого типа *T* или если объект объявлен с использование *auto&&*, то параметр или объект объявлен универсальной ссылкой.
+* Если вид объекта типа не является в точности *type&&* или если вывод типа не имеет места, то *type&&* означает *rvalue*-ссылку.
+* Универсальные ссылки соответствуют *rvalue*-ссылкам, если они инициализируются значением *rvalue*. Они соответствуют *lvalue*-ссылкам, если они инициализируются значениями *lvalue*.
+
+### 5.3 Используйте std::move для rvalue-ссылок, а std::forward - для универсальных
 
 
 
