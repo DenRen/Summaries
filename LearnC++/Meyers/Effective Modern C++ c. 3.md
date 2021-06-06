@@ -243,6 +243,219 @@ auto res_np = func (func_np, nullptr);  // Ок
 
 ## 3.3 Предпочитайте объявление псевдонимов применению typedef
 
+Сокращения имён типов в C++ можно сделать двумя способами:
+```cpp
+typedef
+    std::unique_ptr <std::unordered_map <std::string, std:string>>
+    UPtrMapSS;
+```
+```cpp
+using UPtrMapSS = std::unique_ptr <std::unordered_map <std::string, std:string>>;
+```
+
+Это в точности одно и тоже.
+Различия начинаются, когда дело доходит до шаблонов:
+```cpp
+template <typename T>
+using MyAllocList = std::list <T, MyAlloc <T>>;
+
+MyAllocList <Widget> lw; // Кратко понятно
+```
+```cpp
+template <typename T>
+struct MyAllocList {
+    typedef std::list <T, MyAlloc <T>> type;
+};
+
+MyAllocList <Widget>::type lw; // Добавляется лишнее слово ::type
+```
+
+Но следующий пример становится действительно расточительным для *typedef*:
+```cpp
+template <typename T>
+class Widget {
+private:
+    typename MyAllocList <T>::type list;
+};
+```
+
+Здесь *MyAllocList \<T\>::type* ссылается на тип, который зависит от параметра типа шаблона (T). Тем самым MyAllocList \<T\>::type* является *зависимым типом (depended type)*, а одно из милых правил C++ требует, чтобы имена зависимых типов представлялись ключевым словом *typename*.
+
+Использую псевдоним, всё становится куда лучше:
+```cpp
+template <typename T>
+using MyAllocList = std::list <T, MyAlloc <T>>;
+
+template <typename T>
+class Widget {
+private:
+    MyAllocList <T> list; // Ни typename, ни ::type
+};
+```
+
+#### TMP - template metaprogramming
+#### Свойства типов - type traits
+
+Набор шаблонов в заголовочном файле <type_traits>:
+```cpp
+// C++11
+std::remove_const <T>::type;
+std::remove_reference <T>::type;
+std::add_lvalue_reference <T>::type;
+
+// C++14
+std::remove_const_t <T>;
+std::remove_reference_t <T>;
+std::add_lvalue_reference_t <T>;
+```
+
+Также для C++14 не нужно будет писать *typename* для каждого использования подобных конструкций, т.к. это всё псевдонимы, а *std::\*\*\* \<T\>::type* - *typdef*.
+
+Вообще это всё пишется самому очень просто:
+```cpp
+template <class T>
+using remove_const_t = typename remove_const <T>::type;
+```
+
+### <center>Следует запомнить</center>
+* В отличие от псевдонимов, *typedef* не поддерживает шаблонизацию
+* Шаблоны псевдонимов не требуют суффикса *"::type"*, а в шаблонах префикса *typename*, часто требуемого при обращении к *typedef*
+* C++14 предлагает шаблоны псевдонимов для всех  преобразований свойств типов C++11.
+
+## 3.4 Предпочитайте перечисления с областью видимости перечислениям без таковой
+
+```cpp
+enum Color {black, white, red}; // Без области видимости (Unscoped)
+enum class Color {
+    black, white, red           // С областью вилимостью (Scoped enum)
+};
+```
+
+У *enum class* нет неявных преобразований в числа. Они существенно строже типизированы, нежели *enum*.
+
+Можно использовать явное приведение типа для исполнения своих грязных желаний:
+```cpp
+Color c = Color::red;
+auto num_red = static_cast <double> (x);
+```
+
+Если *enum* объявлен в каком-то важно заголовочном файле и вы добавили в *enum* новое поле, то вам придутся перекомпилировать всю систему полностью. Это очень плохо!
+
+Но если же вы используете *enum class*, то будет работать даже следующий пример:
+```cpp
+enum class Status;
+void continueProcessing (Status s);
+```
+
+Но как компилятор знает размер *enum class*? Для *enum* всё понятно, его можно только определить, но ведь *enum class* можно ведь и просто объявить. Ответ прост: он заранее известен. По умолчанию для *enum class* он *int*, но мы можем его перекрыть:
+```cpp
+enum class Status : std::uint32_t; // Базовый тип лоя Status - std::uint32_t
+```
+
+Но иногда *enum* полезен. Мы можем использовать его для адекватного (не нужно хранить числа в голове программиста) и немногословного доступа к элементам кортежа:
+```cpp
+using UserInfo =
+    std::tuple <std::string,    // Имя
+                std::string,    // Адрес
+                std::size_t>;   // Репутация
+                
+UserInfo uInfo;
+
+auto val = std::get <1> (uinfo); // Получение значения поля 1
+```
+
+Добавим *enum* для удобства:
+```cpp
+enum UserInfoFields { uiName, uiEmail, uiReputation };
+
+UserInfo uInfo;
+
+auto val = std::get <uiEmail> (uInfo);
+```
+
+С *enum class* будет будет громоздко.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
