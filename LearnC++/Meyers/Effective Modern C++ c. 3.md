@@ -417,13 +417,80 @@ auto val = std::get <toUType (UserInfoFields::uiEmail)> (uInfo);
 * Как перечисления с областями видимости, так и без таковых поддерживают указание базового типа. Базовым типом по умолчанию с областью видимости является *int*. Перечисления без области видимости базового типа не имеют.
 * Перечисления с областями видимости могут быть предварительно объявлены. Перечисления без областей видимости могут быть предварительно объявлены,  только если их объявление указывает на базовый тип.
 
+### 3.5 Предпочитайте удалённые (deleted) функции закрытым неопределённым
 
+Иногда нужно, чтобы некоторые автоматически создаваемые функции-члены класса или просто функции нельзя было использовать. Например, конструктор копирования или оператор присваивания. Вот два способа в стилях C++98 и C++11:
+```cpp
+// C++98
+template <class charT, class traits = char_traits <charT>>
+class basic_ios : public ios_base {
+public:
+    // ...
+    
+private:
+    basic_ios (const basic_ios&);               // Не определён
+    basic_ios& operator= (const basic_ios&);    // Не определён
+};
+```
 
+```cpp
+// C++11
+template <typename charT, class traits = char_traits <charT>>
+class basic_ios : public ios_base {
+public:
+    // ...
+    
+private:
+    basic_ios (const basic_ios&) = delete;
+    basic_ios& operator= (const basic_ios&) = delete; 
+};
+```
 
+Здесь можно отметить одну деталь: *delete* функции лучше выносить в *public* часть, чтобы при ошибке компилятор говорил, что функция специально удалена, а не то, что она недоступна, потому что находится в *private* части.
 
+Также если мы не хотим, чтобы были какие-то *обычные* функции, то в C++11 мы можем просто их удалить:
+```cpp
+bool isLucky (int number);
+bool isLucky (char) = delete;
+bool isLucky (bool) = delete;
+bool isLucky (double) = delete; // double захватит и float функцию
+```
 
+Также можно удалять специализации:
+```cpp
+template <typename T>
+void processPointer (T* ptr);
 
+template <>
+void processPointer <void> (T* ptr);
 
+template <>
+void processPointer <const void> (T* ptr);
+
+template <>
+void processPointer <volatile void> (T* ptr);
+```
+
+И в отличии от C++98 в C++11 можно удалять специализации  функций, объявленных как public:
+```cpp
+class Widget {
+public:  
+    template <typename T>
+    void processPointer (T* ptr)
+    {
+        //...
+    }
+};
+
+template <>
+void Widget::processPointer <void> (void*) = delete;
+```
+
+### <center>Следует запомнить</center>
+* Предпочитайте удалённые функции закрытым функциям без определений.
+* Удалённой может быть любая функция, включая функции, не являющиеся членами, и инстанцирования шаблонов.
+
+### 3.6 Объявляйте перекрывающие функции как *override*
 
 
 
