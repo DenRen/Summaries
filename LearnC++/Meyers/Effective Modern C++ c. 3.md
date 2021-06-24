@@ -555,11 +555,52 @@ private:
 
 ### 3.7 Предпочитайте итераторы *const_iterator* итераторам *iterator*
 
- 
+В C++98 крайне непрактично сделаны функции, принимающие итераторы. Так что сразу перейдём к практичному C++11 и "доведённому до ума" в некоторых мелочах C++14.
 
+Нужно в местах, где мы не собираемся изменять объект, использовать *const_iterator*:
+```cpp
+std::vector <int> values;
 
+// ...
 
+auto it = std::find (values.cbegin (),    // cbeing, вместо begin
+                     values.cend (),      // cend,   вместо end
+                     1983);
+                     
+values.insert it, 1983);                  // Принимает const_iterator
+```
 
+*Максимально обобщённый код использует функции, не являющиеся членами, а не предполагает наличие функций-членов.* Обобщим предыдущий код:
+```cpp
+template <class C, typename V>
+void FindAndInsert (C container,
+                    const V& targetValue,
+                    const V& insertValue)
+{
+    auto it = std::find (std::cbegin (container),    // Не член cbegin
+                         std::cend   (container),    // Не член cend
+                         targetValue);
+                         
+    container.insert (it, insertValue);
+}
+```
+
+Этот код прекрасно работает в C++14, но не работает в C++11, потому что в C++11 были добавлены только *begin*, *end*, но не были добавлены *cbegin*, *cend*, *rbegin*, *rend*, *crbegin*, *crend*.
+
+Но мы с лёгкостью можем написать сами недостающие функции в С++11, имея только std::begin: 
+```cpp
+template <class C>
+auto cbegin (const C& container) -> decltype (std::begin (container))
+{
+    return std::begin container;
+}
+```
+
+Этот пример работает для всего, даже для встроенных массивов.
+
+### <center>Следует запомнить</center>
+* Предпочитайте использовать *const_iterator* вместо *iterator* там, где это можно.
+* В максимально обобщённом коде предпочтительно использовать версии функции *begin*, *end*, *rbegin* и прочих, не являющиеся членами.
 
 
 
