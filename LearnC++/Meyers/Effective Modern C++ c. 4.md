@@ -339,23 +339,240 @@ processWidget (std::move (spw), computePriority ());
 * Ситуайии, когда применение *make-функций*  неприемлемо, включают необходимость указания пользовательских удалителей и необходимость передачи инициализаторов в фигурных скобках.
 * Для указателей *std::shared_ptr* дополнительными ситауциями, в которых применение *make-функций* может быть неблагоразумным, являются классы с пользовательским управлением памятью и системы, в которых проблемы с объёмом памяти накладываются на использование очень больших объектов и наличие указателей *std::weak_ptr*, время жизни которых существенно превышает время жизни указателей *std::shared_ptr*.
 
+## 4.5 При использовании идиомы указателя на реализацию определяйте специальные функции-члены в файле реализации
 
+Идиома *Pimple* (*pointer to implementation*), напремир, для ускорения компиляции можно в классе хранить не объекты пользовательских классов, заголовочные файлы которых постоянно обновляются, как следствие нужно *всё* зановово перекомпилировать (*долго*), а указатель на общую структуру (*реализацию*), а тип указателя делать неполным:
+```cpp
+class Widget {
+public:
+    Widget ();
+    ~Widget ();
+    
+    //...
+    
+private:
+    struct Impl;    // Объявление структуры реализации
+    Impl* pImpl;    // и указателя на неё
+};
+```
 
+А  в *Widget.cpp* уже определять *struct Impl* и только там подключать пользовательский заголовочный файл для пользовательских типов. Также нужно будет своими руками писать деструктор.
 
+В *Widget.cpp*:
+```cpp
+#include "widget.h"
+#include "gadget.h"
+#include <vector>
+#include <string>
 
+struct Widget::Impl {
+    std::string name;
+    std::vector <double> data;
+    Gadget gadget1, gadget2, gadget3;
+};
 
+Widget::Widget () :
+    pImpl (new Impl)
+{}
 
+Widget::~Widget () {
+    delete Impl;
+}
+```
 
+Этот пример можно улучшить, избавившись от обычных указателей:
+```cpp
+class Widget {
+public:
+    Widget ();
+    
+    //...
+    
+private:
+    struct Impl;                  // Объявление структуры реализации
+    std::unique_ptr <Impl> pImpl; // и интеллектуального указателя на неё
+};
+```
 
+В *Widget.cpp*теперь (теперь без деструктора):
+```cpp
+#include "widget.h"
+#include "gadget.h"
+#include <vector>
+#include <string>
 
+struct Widget::Impl {
+    std::string name;
+    std::vector <double> data;
+    Gadget gadget1, gadget2, gadget3;
+};
 
+Widget::Widget () :
+    pImpl (std::make_unique <Impl> ())
+{}
+```
 
+Вот только этот код не компилируется)
+```cpp
+#include "widget.h"
 
+Widget widget;    // Ошибка!
+```
+Дело в том, что компилятор С++11 проверяет перед использованием *delete* при помощи *static_assert* является ли этот тип укзателем на неполный тип. Чтобы это исправить, нужно обеспечить полноту типа *Widget::Impl* в точке, где генерирует код, уничтожающий *std::unique_ptr <Widget::Impl>*. Нужно просто показать компилятору тело деструктора:
+```cpp
+class Widget {
+public:
+    Widget ();
+    ~Widget ();    // Только объявление
+    //...
+    
+private:
+    struct Impl;
+    std::unique_ptr <Impl> pImpl;
+};
+```
 
+В *Widget.cpp*теперь:
+```cpp
+#include "widget.h"
+#include "gadget.h"
+#include <vector>
+#include <string>
 
+struct Widget::Impl {
+    std::string name;
+    std::vector <double> data;
+    Gadget gadget1, gadget2, gadget3;
+};
 
+Widget::Widget () :
+    pImpl (std::make_unique <Impl> ())
+{}
 
+Widget::~Widget () = default; // Определение ~Widget
+```
 
+Благодаря идиоме *Pimpl* класс *Widget* создан для того, чтобы его перемещали. Но если мы вспомним правила создания перемещающих операций, то поймём, что они не генерируются автоматически, поэтому пишем их сами:
+```cpp
+class Widget {
+public:
+    Widget ();
+    ~Widget ();
+    
+    Widget (Widget&&) = default;                // Идея верна,
+    Widget& operator= (Widget&&) = default;     // код - НЕТ
+    
+    //...
+    
+private:
+    struct Impl;
+    std::unique_ptr <Impl> pImpl;
+};
+```
+
+В *Widget.cpp* как и ранее.
+
+Опять же мы получаем ту же самую ошибку, потому что компилятор не знает в *Widget.h* полный размер *Impl*. Решение такое же, как и в прошлый раз:
+```cpp
+class Widget {
+public:
+    Widget ();
+    ~Widget ();
+    
+    Widget (Widget&&);                // Только объявление
+    Widget& operator= (Widget&&);     // Только объявление
+    
+    //...
+    
+private:
+    struct Impl;
+    std::unique_ptr <Impl> pImpl;
+};
+```
+
+В *Widget.cpp*теперь:
+```cpp
+#include "widget.h"
+
+// ... // Как и ранее
+
+// Определения:
+Widget::Widget (Widget&&) = default;
+Widget::Widget& operator= (Widget&&) = default;
+```
+
+Теперь добавим копирование по тому же принципу, только не забудем, что нам нужно *глубокое копирование*:
+```cpp
+class Widget {
+public:
+    Widget ();
+    ~Widget ();
+    
+    Widget (const Widget&);                // Только объявление
+    Widget& operator= (cosnt Widget&);     // Только объявление
+    
+    //...
+    
+private:
+    struct Impl;
+    std::unique_ptr <Impl> pImpl;
+};
+```
+
+В *Widget.cpp*теперь:
+```cpp
+#include "widget.h"
+
+// ... // Как и ранее
+
+// Определения:
+Widget (const Widget& rhs) :
+    pImpl (nullptr)
+{
+    if (rhs.pImpl != nullptr)
+        pImpl = std::make_unique <Impl> (*rhs.pImpl);
+}
+Widget& operator= (cosnt Widget& rhs) {
+    if (rhs.pImpl == nullptr)
+        pImpl.reset ();
+        
+    else if (pImpl == nullptr)
+        pImpl = std::make_unique <Impl> (rhs.pImpl);
+        
+    else
+        pImpl = rhs.pImpl;
+        
+    return *this;
+}
+```
+
+Если бы мы использовали *std::shared_ptr*, то ничего бы нам писать не пришлось и всё работало именно так, как нам нужно:
+```cpp
+class Widget {
+public:
+    Widget ();
+    
+    //...        // Нет дестрвктора и перемещающих операций
+    
+private:
+    struct Impl;
+    std::shared_ptr <Impl> pImpl;
+};
+```
+```cpp
+Widget w1;
+auto w2 (std::move (w1);
+w1 = std::move (w2);
+```
+
+Такое различие возникает из-за разной поддержки пользовательских указателей.
+
+Но понятно, что для Pimpl нужно использовать исключительное владение, т.е. *std::unqiue_ptr*.
+
+### <center>Следует запомнить</center>
+* Идиома Pimpl уменьшает время компиляции приложения, снижая зависимости компиляции между клиентами и реализациями классов.
+* Для указателей pImpl типа *std::unique_ptr* следует объявить *специальные функции-члены* в заголовочном файле, но реализовать их в файле реализации. Поступайте так, даже если реализации функций по умолчанию являются приемлемыми.
+* Приведённый выше совет применим к интеллектуальному указателю *std::unique_ptr*, но не к *std::shared_ptr*.
 
 
 
