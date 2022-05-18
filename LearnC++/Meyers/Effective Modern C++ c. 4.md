@@ -27,7 +27,7 @@ auto delInvmt = [] (Investment* pInvestment)
         makeLogEntry (pInvestment);
         delete pInvestment;
     }
-    
+
 template <typename... Ts>
 auto makeInvestment (Ts&&... params)    // Фабричная функция (C++14)
 {
@@ -44,7 +44,7 @@ auto makeInvestment (Ts&&... params)    // Фабричная функция (C+
     {
         pInv.reset (new RealEstate (std::forward <Ts> (params)...));
     }
-    
+
     return pInv;
 }
 ```
@@ -53,7 +53,7 @@ auto makeInvestment (Ts&&... params)    // Фабричная функция (C+
 
 Благодаря тому, что *std::unique_ptr* имеет две разновидности: *std::unique_ptr <T>* и *std::unique_ptr <T[]>*, т.е. для объектов и массивов, то не возникает неопределённости на какую сущность указывает *std::unique_ptr*. Но использовать встроенные массивы разумно разве что для С-образного API.
 
-*std::unique_ptr* - способ выражения исключительного владения на С++11. Но очень привлекательно то, что его можно легко и эффективно преобразовать в *std::shared_ptr*:  
+*std::unique_ptr* - способ выражения исключительного владения на С++11. Но очень привлекательно то, что его можно легко и эффективно преобразовать в *std::shared_ptr*:
 ```cpp
 std::shared_ptr <Investment> sharedPointer = makeInvestment (args);
 ```
@@ -83,10 +83,10 @@ auto loggingDel = [] (Widget* pw)
         makeLogEntry (pw);
         delete pw;
     }
-    
+
 std::unique_ptr <Widget, decltype (loggingDel)
                 > upw (new Widget, loggingDel);
-                
+
 std::shared_ptr <Widget> spw (new Widget, loggingDel);
 ```
 
@@ -150,7 +150,7 @@ public:
     static std::shared_ptr <Widget> create (Ts&&... params);
     // ...
     void process ();    // Как и ранее
-    
+
 private:
     // Конструкторы
 };
@@ -191,17 +191,17 @@ std::unique_ptr <const Widget> loadWidget (Widget id);
 ```cpp
 std::shared_ptr <Widget> fastLoadWidget (Widget id)
 {
-    static std::unordered_map <WidgetID, 
+    static std::unordered_map <WidgetID,
                                std::weak_ptr <Widget>> cache;
-                               
+
     auto objPtr = cache[id].lock (); // objPtr является shared_ptr
-    
+
     if (!objPtr) {
         objPtr = loadWidget (id);
-        
+
         cache[id] = objPtr;
     }
-    
+
     return objPtr;
 }
 ```
@@ -347,9 +347,9 @@ class Widget {
 public:
     Widget ();
     ~Widget ();
-    
+
     //...
-    
+
 private:
     struct Impl;    // Объявление структуры реализации
     Impl* pImpl;    // и указателя на неё
@@ -385,9 +385,9 @@ Widget::~Widget () {
 class Widget {
 public:
     Widget ();
-    
+
     //...
-    
+
 private:
     struct Impl;                  // Объявление структуры реализации
     std::unique_ptr <Impl> pImpl; // и интеллектуального указателя на неё
@@ -425,7 +425,7 @@ public:
     Widget ();
     ~Widget ();    // Только объявление
     //...
-    
+
 private:
     struct Impl;
     std::unique_ptr <Impl> pImpl;
@@ -458,12 +458,12 @@ class Widget {
 public:
     Widget ();
     ~Widget ();
-    
+
     Widget (Widget&&) = default;                // Идея верна,
     Widget& operator= (Widget&&) = default;     // код - НЕТ
-    
+
     //...
-    
+
 private:
     struct Impl;
     std::unique_ptr <Impl> pImpl;
@@ -478,12 +478,12 @@ class Widget {
 public:
     Widget ();
     ~Widget ();
-    
+
     Widget (Widget&&);                // Только объявление
     Widget& operator= (Widget&&);     // Только объявление
-    
+
     //...
-    
+
 private:
     struct Impl;
     std::unique_ptr <Impl> pImpl;
@@ -507,12 +507,12 @@ class Widget {
 public:
     Widget ();
     ~Widget ();
-    
+
     Widget (const Widget&);                // Только объявление
     Widget& operator= (cosnt Widget&);     // Только объявление
-    
+
     //...
-    
+
 private:
     struct Impl;
     std::unique_ptr <Impl> pImpl;
@@ -535,13 +535,13 @@ Widget (const Widget& rhs) :
 Widget& operator= (cosnt Widget& rhs) {
     if (rhs.pImpl == nullptr)
         pImpl.reset ();
-        
+
     else if (pImpl == nullptr)
         pImpl = std::make_unique <Impl> (rhs.pImpl);
-        
+
     else
         pImpl = rhs.pImpl;
-        
+
     return *this;
 }
 ```
@@ -551,9 +551,9 @@ Widget& operator= (cosnt Widget& rhs) {
 class Widget {
 public:
     Widget ();
-    
+
     //...        // Нет дестрвктора и перемещающих операций
-    
+
 private:
     struct Impl;
     std::shared_ptr <Impl> pImpl;

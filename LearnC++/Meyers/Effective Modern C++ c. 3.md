@@ -5,7 +5,7 @@
 
 С++ трактует следующие выражении одинаково:
 ```cpp
-int z { 0 };    // То же 
+int z { 0 };    // То же
 int z = { 0 };  // самое
 ```
 
@@ -14,7 +14,7 @@ int z = { 0 };  // самое
 Примеры:
 ```cpp
 std::vector <int> v { 1, 3, 5 };
-``` 
+```
 
 ```cpp
 class Widget {
@@ -38,7 +38,7 @@ std::atomic <int> ail2 = 0;   // Ошибка!
 ```cpp
 double x = 0, y = 0, z = 0;
 
-int sum { x + y + z }; // Ошибка! Сумма double не выражется с помощью int 
+int sum { x + y + z }; // Ошибка! Сумма double не выражется с помощью int
 ```
 
 Правда в данном случае gcc кинет Warning, но не более.
@@ -48,7 +48,7 @@ int sum { x + y + z }; // Ошибка! Сумма double не выражетс�
 ```cpp
 int sum1 (x + y + z);
 int sum2 = x + y + z;
-```  
+```
 
 Фигурные скобки решают проблему *наиболее неприятного анализа*:
 ```cpp
@@ -69,7 +69,7 @@ public:
 };
 
 Widget w0 (10, true);    // Вызов первого конструктора
-Widget w1 {10, true};    // Вызов первого конструктора    
+Widget w1 {10, true};    // Вызов первого конструктора
 Widget w2 (10, 3.14);    // Вызов второго конструктора
 Widget w3 {10, 3.14};    // Вызов второго конструктора
 ```
@@ -80,12 +80,12 @@ class Widget {
 public:
     Widget (int i, bool b);    // Как и ранее
     Widget (int i, double d);  // Как и ранее
-    
+
     Widget (std::initializer_list <long double> i1); // Добавлен
 };
 
 Widget w0 (10, true);    // Вызов первого конструктора
-Widget w1 {10, true};    // Вызов третьего конструктора (10, true -> long double)   
+Widget w1 {10, true};    // Вызов третьего конструктора (10, true -> long double)
 Widget w2 (10, 3.14);    // Вызов второго конструктора
 Widget w3 {10, 3.14};    // Вызов третьего конструктора (10, 3.14 -> long double)
 ```
@@ -96,13 +96,13 @@ class Widget {
 public:
     Widget (int i, bool b);    // Как и ранее
     Widget (int i, double d);  // Как и ранее
-    
+
     operator float () const;   // Преобразование во float
 };
 
 Widget w4 (w3);                // Копирующий конструктор
 Widget w5 {w3};                // Конструктора с std::initializer_list
-                               // (w3 преобр. в float, а float преобр. в long double)   
+                               // (w3 преобр. в float, а float преобр. в long double)
 Widget w6 (std::move (w3));    // Перемещающий конструктор
 Widget w7 {std::move (w3)};    // Аналогично w5
 ```
@@ -113,9 +113,9 @@ class Widget {
 public:
     Widget (int i, bool b);    // Как и ранее
     Widget (int i, double d);  // Как и ранее
-    
+
     Widget (std::initializer_list <bool> (i)); // Теперь тип элемента - bool
-    
+
     // Нет функций неявного преобразования
 };
 
@@ -130,14 +130,14 @@ class Widget {
 public:
     Widget (int i, bool b);    // Как и ранее
     Widget (int i, double d);  // Как и ранее
-    
+
     Widget (std::initializer_list <std::string> (i)); // Теперь тип элемента - std::string
-    
+
     // Нет функций неявного преобразования
 };
 
 Widget w0 (10, true);    // Вызов первого конструктора
-Widget w1 {10, true};    // Вызов первого конструктора    
+Widget w1 {10, true};    // Вызов первого конструктора
 Widget w2 (10, 3.14);    // Вызов второго конструктора
 Widget w3 {10, 3.14};    // Вызов второго конструктора
 ```
@@ -148,9 +148,9 @@ class Widget {
 public:
     Widget (int i, bool b);    // Как и ранее
     Widget (int i, double d);  // Как и ранее
-    
+
     Widget (std::initializer_list <int> (i));
-    
+
     // Нет функций неявного преобразования
 };
 
@@ -185,7 +185,7 @@ void doSomeWork (Ts&&... params) {
 Рассмотрим два способа создания локального объекта:
 ```cpp
 T localObject (std::forward <Ts> (params)...);    // Круглые скобки
-T localObject {std::forward <Ts> (params)...};    // Фигурные скобки 
+T localObject {std::forward <Ts> (params)...};    // Фигурные скобки
 ```
 
 А вот самое интересное:
@@ -358,7 +358,7 @@ using UserInfo =
     std::tuple <std::string,    // Имя
                 std::string,    // Адрес
                 std::size_t>;   // Репутация
-                
+
 UserInfo uInfo;
 
 auto val = std::get <1> (uinfo); // Получение значения поля 1
@@ -390,7 +390,7 @@ auto val = std::get <static_cast <std::size_t> (UserInfoFields::uiEmail)> (uInfo
 // C++ 11
 template <typename E>
 constexpr typename std::underlying_type <E>::type
-toUType (E enumerator) noexcept 
+toUType (E enumerator) noexcept
 {
     return static_cast <typename std::underlying_type <E>::type> (enumerator);
 }
@@ -426,7 +426,7 @@ template <class charT, class traits = char_traits <charT>>
 class basic_ios : public ios_base {
 public:
     // ...
-    
+
 private:
     basic_ios (const basic_ios&);               // Не определён
     basic_ios& operator= (const basic_ios&);    // Не определён
@@ -439,10 +439,10 @@ template <typename charT, class traits = char_traits <charT>>
 class basic_ios : public ios_base {
 public:
     // ...
-    
+
 private:
     basic_ios (const basic_ios&) = delete;
-    basic_ios& operator= (const basic_ios&) = delete; 
+    basic_ios& operator= (const basic_ios&) = delete;
 };
 ```
 
@@ -462,19 +462,19 @@ template <typename T>
 void processPointer (T* ptr);
 
 template <>
-void processPointer <void> (T* ptr);
+void processPointer <void> (void* ptr);
 
 template <>
-void processPointer <const void> (T* ptr);
+void processPointer <const void> (const void* ptr);
 
 template <>
-void processPointer <volatile void> (T* ptr);
+void processPointer <volatile void> (volatile void* ptr);
 ```
 
 И в отличии от C++98 в C++11 можно удалять специализации  функций, объявленных как public:
 ```cpp
 class Widget {
-public:  
+public:
     template <typename T>
     void processPointer (T* ptr)
     {
@@ -507,14 +507,14 @@ C++11 даёт возможность явно указать, что функц
 ```cpp
 class Base {
     public:
-    
+
     virtual void doWork () const;
 };
 
 class Derived : public Base {
-public:  
+public:
     // void doWork (); // Не скомпилируется
-    
+
     void doWork () const override
     { //... }
 };
@@ -530,19 +530,19 @@ class Widget {
 public:
     using DataType = std::vector <double>;
     // ...
-    
+
     DataType& data () &        // Для lvalue Widget возвращает lvalue
     {
         return values;
     }
-    
-    DataType&& data () &&      // Для rvalue Widget возвращает rvalue 
+
+    DataType&& data () &&      // Для rvalue Widget возвращает rvalue
     {
         return std::move (values);
     }
-    
+
     // ...
-    
+
 private:
     DataType values;
 };
@@ -566,7 +566,7 @@ std::vector <int> values;
 auto it = std::find (values.cbegin (),    // cbeing, вместо begin
                      values.cend (),      // cend,   вместо end
                      1983);
-                     
+
 values.insert it, 1983);                  // Принимает const_iterator
 ```
 
@@ -580,14 +580,14 @@ void FindAndInsert (C container,
     auto it = std::find (std::cbegin (container),    // Не член cbegin
                          std::cend   (container),    // Не член cend
                          targetValue);
-                         
+
     container.insert (it, insertValue);
 }
 ```
 
 Этот код прекрасно работает в C++14, но не работает в C++11, потому что в C++11 были добавлены только *begin*, *end*, но не были добавлены *cbegin*, *cend*, *rbegin*, *rend*, *crbegin*, *crend*.
 
-Но мы с лёгкостью можем написать сами недостающие функции в С++11, имея только std::begin: 
+Но мы с лёгкостью можем написать сами недостающие функции в С++11, имея только std::begin:
 ```cpp
 template <class C>
 auto cbegin (const C& container) -> decltype (std::begin (container))
@@ -629,7 +629,7 @@ RetType function (params);          // Менее оптимизируема
 template <class C, std::size_t N>
 void swap (C (&a)[N],
            C (&b)[N]) noexcept (noexcept (swap (*a, *b));
-           
+
 template <typename T>
 struct pair {
     void swap (pair& p) noexcept (noexcept (swap (first,  p.first)) &&
@@ -652,7 +652,7 @@ void func const std::string& str) noexcept; // Предусловие: str.lengt
 
 Также компилятор не обязан выдавать ошибку в случае, если функция объявленная как *noexcept*, вызывает не *noexcept* функции, потому что они могут быть строго задокументированы как не генерирующие исключений, либо эти функции могут быть частью С интерфейса, либо частью стандартной библиотеки С++98.
 
-### <center>Следует запомнить</center> 
+### <center>Следует запомнить</center>
 * *noexcept* является частью интерфейса функции, а это означает, что вызывающий код может зависеть от данного модификатора.
 * Функции, объявленные как *noexcept*, предоставляют б*о*льшие возможности оптимизации, чем без такой спецификации.
 * Спецификация *noexcept* имеет особое значение для операций перемещения, обмена, функций освобождения памяти и деструкторов.
@@ -669,7 +669,7 @@ int size = 10; // Неконстантная переменная!!
 constexpr auto arraySize1 = size;     // Ошибка! Значение size не известно во время компиляции
 std::array <int, size> data1;         // Ошибка! Значение size не извеснто во время компиляции
 
-constexpr auto arraySize2 = 10;       // OK, 10 - константа времени компиляции  
+constexpr auto arraySize2 = 10;       // OK, 10 - константа времени компиляции
 std::array <int, arraySize2> data2;   // OK, arraySize2 - constexpr
 ```
 
@@ -707,7 +707,7 @@ constexpr pow (int base, int exp) noexcept
     auto result = 1;
     for (int i = 1; i < base; ++i)
         result *= base;
-    
+
     return result;
 }
 ```
@@ -723,13 +723,13 @@ public:
     constexpr Point (double xVal = 0, yVal = 0) noexcept :
         x (xVal), y (yVal)
     {}
-    
+
     constexpr double xValue () const noexcept { return x; }
     constexpr double yValue () const noexcept { return y; }
-    
+
     void setX (double newX) noexcept { x = newX; }
-    void setY (double newY) noexcept { y = newY; } 
-    
+    void setY (double newY) noexcept { y = newY; }
+
 private:
     double x, y;
 };
@@ -779,18 +779,18 @@ constexpr auto reflectionMid = reflection (mid); // (-19.1, -16.5) - извес�
 class Polynomial {
 public:
     using RootsType = std::vector <double>;
-    
+
     RootsType roots () const
     {
         if (!rootsAreValid) {
             // Вычисляемм корни
-            
+
             rootsAreValid = true;
         }
-        
+
         return rootVals;
     }
-    
+
 private:
     mutable bool rootsAreValid {false};
     mutable RootsType rootVals {};
@@ -802,19 +802,19 @@ private:
 class Polynomial {
 public:
     using RootsType = std::vector <double>;
-    
+
     RootsType roots () const
     {
         std::lock_guard <std::mutex> guard (mutex);    // Блокировка
         if (!rootsAreValid) {
             // Вычисляемм корни
-            
+
             rootsAreValid = true;
         }
-        
+
         return rootVals;                               // Разблокирование
     }
-    
+
 private:
     mutable std::mutex mutex;
     mutable bool rootsAreValid {false};
@@ -836,12 +836,12 @@ public:
 
             cachedValue = value1 + value2;    // Сложение
             cacheValide = true;               // Установка индикатора
-            
+
             return cachedValue;
         }
     }
-    
-private:  
+
+private:
     mutable std::atomic <bool> cacheValid {false};
     mutable std::atomic <int> cachedValue;
 };
@@ -864,11 +864,11 @@ public:
 
             cachedValue = value1 + value2;    // Сложение
             cacheValide = true;               // Установка индикатора
-            
+
             return cachedValue;                        // Разблокирование mutex
         }
     }
-    
+
 private:
     mutable std::mutex mutex;
     mutable bool cacheValid {false};
@@ -931,13 +931,13 @@ public:
 class Base {
 public:
     virtual ~Base () = default;                // Делает конструктор виртуальным
-    
+
     Base (Base&&) = default;                   // Поддержка перемещения
     Base& operator= (Base&&) = default;
-    
+
     Base (const Base&) = default;              // Поддержка копирования
     Base& operator= (const Base&) = default;
-    
+
     // ...
 };
 ```
@@ -947,7 +947,7 @@ public:
 Пример:
 ```cpp
 class StringTable {
-public:  
+public:
     StringTable () {}
 
 private:
@@ -958,11 +958,11 @@ private:
 Добавим логирование:
 ```cpp
 class StringTable {
-public:  
+public:
     StringTable () {
         makeLogEntry ("Создание StringTable");    // Добавлено
     }
-    
+
     ~StringTable () {
         makeLogEntry ("Удаление StringTable");    // Добавлено, но удалились перемещающие операции!!!
     }
@@ -987,7 +987,7 @@ class Widget {
 public:
     template <typename T>
     Widget (const T& rhs);
-    
+
     template <typename T>
     Widget& operator= (const T& rhs);
 };

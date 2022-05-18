@@ -11,14 +11,14 @@
 2) Иногда просто неудобно записывать громоздкий тип:
     ```cpp
     template <typename T>
-    void dwim (It b, It e) {  
+    void dwim (It b, It e) {
         while (b != e) {
             typename std::iterator_traits <It>::value_type
                 currValue = *b;
             ...
         }
     }
-    ``` 
+    ```
 3) Попытка объявить локальную переменную с типом лямбда-выражения. Но этот тип известен только **компилятору**!
 
 Все эти проблемы решаются введением ключевого слова *auto*:
@@ -45,7 +45,7 @@ auto derefUPLess =
 [] (const std::unique_ptr <Widget>& p1,
     const std::unique_ptr <Widget>& p2)
     { return *p1 < *p2; }
-    
+
 // Второе решение 3-ей проблемы
 auto derefUPLess =
 [] (const auto& p1,
@@ -58,7 +58,7 @@ auto derefUPLess =
 ```cpp
 std::function <bool (const std::unique_ptr <Widget>&,
                      const std::unique_ptr <Widget>&)>
-                     
+
 derefUPLess =    [] (const std::unique_ptr <Widget>& p1,
                      const std::unique_ptr <Widget>& p2)
                         { return *p1 < *p2; }
@@ -75,7 +75,7 @@ std::vector <int> v;
 
 unsigned size_0 = v.size (); // Для x32 всё нормально
                              // Для x64 4-ёх байтовый тип приравнивается 8 байтному
-                             // Неоректное поведение 
+                             // Неоректное поведение
 
 auto size = v.size ();       // Тип автоматически определится: std::vector <int>::size_type
 ```
@@ -88,7 +88,7 @@ for (const std::pair <std::string, int>& p : m) {
     ...
 }
 ```
-Дело в том, что часть *unordered_map*, содержащая ключ, является константной, поэтому, чтобы получить *std::string&* из *const std::string&* создаётся копия, приравнивается, используется и удаляется. Это крайне неэффективно! 
+Дело в том, что часть *unordered_map*, содержащая ключ, является константной, поэтому, чтобы получить *std::string&* из *const std::string&* создаётся копия, приравнивается, используется и удаляется. Это крайне неэффективно!
 
 Чтобы избежать такой ошибки, достаточно пользоваться *auto*:
 ```cpp
